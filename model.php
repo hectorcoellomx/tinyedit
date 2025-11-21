@@ -379,6 +379,22 @@ class Item extends BaseModel {
         return $items;
     }
 
+    /**
+     * Obtener items raíz (parent_id IS NULL)
+     */
+    public function getRootItems() {
+        $sql = "SELECT * FROM `items` WHERE `parent_id` IS NULL ORDER BY `order` ASC, `created_at` DESC";
+        return $this->run($sql, [], 'all');
+    }
+
+    /**
+     * Contar hijos de un item
+     */
+    public function countChildren($parentId) {
+        $row = $this->run("SELECT COUNT(*) AS cnt FROM `items` WHERE `parent_id` = ?", [$parentId], 'one');
+        return $row ? (int)($row['cnt'] ?? 0) : 0;
+    }
+
     // Buscar items
     public function search($query, $fields = ['title', 'content']) {
         $conditions = [];
