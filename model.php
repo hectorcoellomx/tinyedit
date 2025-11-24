@@ -383,7 +383,7 @@ class Item extends BaseModel {
      * Obtener items raíz (parent_id IS NULL)
      */
     public function getRootItems() {
-        $sql = "SELECT * FROM `items` WHERE `parent_id` IS NULL ORDER BY `order` ASC, `created_at` DESC";
+        $sql = "SELECT * FROM `items` WHERE `parent_id` IS NULL ORDER BY `order` ASC, `title` ASC";
         return $this->run($sql, [], 'all');
     }
 
