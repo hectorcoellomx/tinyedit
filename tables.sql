@@ -8,18 +8,13 @@ CREATE TABLE `items` (
   `subtitle` VARCHAR(255) NULL,
   `content` LONGTEXT NULL,
   `excerpt` TEXT NULL,
-  `meta_data` JSON NULL,
-  `order` INT(11) NOT NULL DEFAULT 0,
-  `status` ENUM('draft', 'published', 'archived') NOT NULL DEFAULT 'draft',
-  `editable_fields` VARCHAR(500) NULL COMMENT 'Campos editables por editor separados por coma',
-  `published_at` TIMESTAMP NULL,
+  `order` TINYINT(2) NOT NULL DEFAULT 0,
+  `status` TINYINT(1) NOT NULL DEFAULT 1,
+  `locked_fields` VARCHAR(500) NOT NULL DEFAULT '',
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_shortname` (`shortname`),
-  KEY `idx_parent` (`parent_id`),
-  KEY `idx_slug` (`slug`),
-  KEY `idx_type_status` (`type`, `status`),
   FOREIGN KEY (`parent_id`) REFERENCES `items`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
