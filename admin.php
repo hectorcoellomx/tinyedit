@@ -4,7 +4,59 @@ require_once 'model.php';
 
 $itemModel = new Item();
 
-$parentId = isset($_GET['item']) && $_GET['item'] !== '' ? (int)$_GET['item'] : null;
+// Variables para mensajes
+$message = null;
+$messageType = null; // 'success', 'error', 'warning'
+
+// Procesar formulario POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['shortname'])) {
+	// Validar campos requeridos
+	$errors = [];
+	
+	if (empty($_POST['shortname'])) {
+		$errors[] = 'El shortname es obligatorio';
+	}
+	
+	// Validar que shortname no tenga espacios ni caracteres especiales
+	if (!empty($_POST['shortname']) && !preg_match('/^[a-z0-9_\-]+$/i', $_POST['shortname'])) {
+		$errors[] = 'El shortname solo puede contener letras, números, guiones y guiones bajos';
+	}
+	
+	if (!empty($errors)) {
+		$message = 'Error al guardar el item:<br>' . implode('<br>', $errors);
+		$messageType = 'error';
+	} else {
+
+		// Preparar datos para guardar
+		$parent = isset($_POST['parent_id']) && $_POST['parent_id'] !== '' ? (int)$_POST['parent_id'] : null;
+		$data = [
+			'parent_id' => $parent,
+			'shortname' => $_POST['shortname'],
+			'title' => $_POST['title'] ?? null,
+			'subtitle' => $_POST['subtitle'] ?? null,
+			'content' => $_POST['content'] ?? null,
+			'excerpt' => $_POST['excerpt'] ?? null,
+			'status' => $_POST['status'] ?? '1',
+			'url' => $_POST['url'] ?? '',
+			'media_link' => $_POST['media_link'] ?? '',
+			'order' => isset($_POST['order']) ? (int)$_POST['order'] : 0
+		];
+		
+		try {
+			$newId = $itemModel->create($data);
+			$message = "Item creado exitosamente con ID: $newId";
+			$messageType = 'success';
+
+			$parentId = $parent;
+		} catch (Exception $e) {
+			$message = 'Error al guardar el item: ' . $e->getMessage();
+			$messageType = 'error';
+		}
+	}
+}else{
+	$parentId = isset($_GET['item']) && $_GET['item'] !== '' ? (int)$_GET['item'] : null;
+}
+
 
 $actual_item = null;
 
@@ -41,6 +93,13 @@ function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 	</div>
 </nav>
 
+<?php if ($message): ?>
+	<div class="alert alert-<?php echo $messageType === 'success' ? 'success' : ($messageType === 'warning' ? 'warning' : 'danger'); ?> alert-dismissible fade show m-3" role="alert">
+		<?php echo $message; ?>
+		<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+	</div>
+<?php endif; ?>
+
 <div class="container">
 	<div class="d-flex justify-content-between align-items-center mb-3 mt-4">
 		<h4><?php echo ($parentId !== null) ? 'Items de "' . h($actual_item['shortname'] . '"') : 'Lista de items'; ?></h4>
@@ -48,7 +107,7 @@ function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 			<?php
 			echo ($parentId!=NULL) ? '<a href="admin.php?item=' . $actual_item['parent_id'] . '" class="btn btn-sm btn-secondary"><i class="bi bi-arrow-left"></i> Volver atrás</a>' : '';
 			?>
-			<button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalAddItem">
+			<button type="button" class="btn btn-sm btn-success" onclick="setAction()">
 				<i class="bi bi-plus-circle"></i> Agregar
 			</button>
 		</div>
@@ -83,19 +142,13 @@ function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 							<td><?php echo $r['status'] == 1 ? 'Activo' : 'Inactivo' ; ?></td>
 							<td style="width: 200px;">
 								<div class="d-flex gap-2">
-									<?php if ($childrenCount > 0): ?>
-										<a href="?item=<?php echo $id; ?>" class="btn btn-sm btn-primary" title="Abrir hijos">
-											<i class="bi bi-folder2-open"></i> Abrir
-										</a>
-									<?php else: ?>
-										<button class="btn btn-sm btn-outline-secondary" disabled title="No tiene hijos">
-											<i class="bi bi-folder2"></i> Abrir
-										</button>
-									<?php endif; ?>
-
 									<a href="?item=<?php echo $id; ?>" class="btn btn-sm btn-primary" title="Abrir hijos">
-										<i class="bi bi-pencil"></i> Editar
+										<i class="bi bi-folder2-open"></i> Abrir
 									</a>
+
+									<button type="button" class="btn btn-sm btn-primary" onclick="setAction(<?php echo $id; ?>)" title="Editar">
+										<i class="bi bi-pencil"></i> Editar
+									</button>
 
 								</div>
 							</td>
@@ -123,7 +176,7 @@ function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 							<input type="text" class="form-control" id="itemShortname" name="shortname" placeholder="Ej: home" required>
 						</div>
 						<div class="mb-3">
-							<label for="itemTitle" class="form-label">Título <span class="text-danger">*</span></label>
+							<label for="itemTitle" class="form-label">Título</label>
 							<input type="text" class="form-control" id="itemTitle" name="title" placeholder="Ej: Mi página principal">
 						</div>
 						<div class="mb-3">
@@ -157,7 +210,9 @@ function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 							<label for="itemOrder" class="form-label">Orden</label>
 							<input type="number" class="form-control" id="itemOrder" name="order" value="0" min="0">
 						</div>
-						<input type="hidden" name="parent_id" value="<?php echo $parentId !== null ? $parentId : 0; ?>">
+						<input type="hidden" id="type_action" name="type_action" value="create">
+						<input type="hidden" id="item_id" name="id" value="">
+						<input type="hidden" name="parent_id" value="<?php echo $parentId !== null ? $parentId : ''; ?>">
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -170,6 +225,25 @@ function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
 </div>
 
+<script>
+	function setAction(id = null) {
+		const typeActionInput = document.getElementById('type_action');
+		const itemIdInput = document.getElementById('item_id');
+		const modal = new bootstrap.Modal(document.getElementById('modalAddItem'));
+		
+		if (id) {
+			// Editar
+			typeActionInput.value = 'update';
+			itemIdInput.value = id;
+		} else {
+			// Crear
+			typeActionInput.value = 'create';
+			itemIdInput.value = '';
+		}
+		
+		modal.show();
+	}
+</script>
 <!-- Bootstrap JS (opcional) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>

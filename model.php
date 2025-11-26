@@ -193,39 +193,24 @@ class Item extends BaseModel {
         return $item;
     }
 
-    // Obtener item por slug
-    public function getBySlug($slug) {
-        $item = $this->run("SELECT * FROM `items` WHERE `slug` = ?", [$slug], 'one');
-        if ($item && !empty($item['meta_data'])) {
-            $item['meta_data'] = json_decode($item['meta_data'], true);
-        }
-        return $item;
-    }
-
     // Crear item
     public function create($data) {
         $sql = "INSERT INTO `items` (
-            `parent_id`, `type`, `shortname`, `slug`, `title`, `subtitle`, 
-            `content`, `excerpt`, `meta_data`, `order`, `status`, 
-            `editable_fields`, `published_at`
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-        $metaData = isset($data['meta_data']) ? json_encode($data['meta_data']) : null;
+            `parent_id`, `shortname`, `url`, `media_link`, `title`, `subtitle`, 
+            `content`, `excerpt`, `order`, `status`
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $params = [
             $data['parent_id'] ?? null,
-            $data['type'] ?? null,
             $data['shortname'] ?? null,
-            $data['slug'] ?? null,
+            $data['url'] ?? null,
+            $data['media_link'] ?? null,
             $data['title'] ?? null,
             $data['subtitle'] ?? null,
             $data['content'] ?? null,
             $data['excerpt'] ?? null,
-            $metaData,
             $data['order'] ?? 0,
-            $data['status'] ?? 'draft',
-            $data['editable_fields'] ?? null,
-            $data['published_at'] ?? null
+            $data['status'] ?? '1'
         ];
 
         $this->run($sql, $params, 'none');
@@ -244,17 +229,15 @@ class Item extends BaseModel {
         $values = [];
 
         $allowedFields = [
-            'parent_id', 'type', 'shortname', 'slug', 'title', 'subtitle',
-            'content', 'excerpt', 'meta_data', 'order', 'status',
+            'parent_id', 'type', 'shortname', 'url', 'media_link', 'title', 'subtitle',
+            'content', 'excerpt', 'order', 'status',
             'editable_fields', 'published_at'
         ];
 
         foreach ($allowedFields as $field) {
             if (array_key_exists($field, $data)) {
                 $fields[] = "`$field` = ?";
-                $values[] = ($field === 'meta_data' && is_array($data[$field]))
-                    ? json_encode($data[$field])
-                    : $data[$field];
+                $values[] = $data[$field];
             }
         }
 
