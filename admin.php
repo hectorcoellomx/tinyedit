@@ -44,10 +44,13 @@ function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 <div class="container">
 	<div class="d-flex justify-content-between align-items-center mb-3 mt-4">
 		<h4><?php echo ($parentId !== null) ? 'Items de "' . h($actual_item['shortname'] . '"') : 'Lista de items'; ?></h4>
-		<div style="height: 40px;">
+		<div class="d-flex gap-2">
 			<?php
 			echo ($parentId!=NULL) ? '<a href="admin.php?item=' . $actual_item['parent_id'] . '" class="btn btn-sm btn-secondary"><i class="bi bi-arrow-left"></i> Volver atrás</a>' : '';
 			?>
+			<button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalAddItem">
+				<i class="bi bi-plus-circle"></i> Agregar
+			</button>
 		</div>
 	</div>
 
@@ -101,6 +104,66 @@ function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 					<?php endif; ?>
 					</tbody>
 				</table>
+			</div>
+		</div>
+	</div>
+
+	<!-- Modal para agregar Item -->
+	<div class="modal fade" id="modalAddItem" tabindex="-1" aria-labelledby="modalAddItemLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h1 class="modal-title fs-5" id="modalAddItemLabel">Agregar nuevo item <?php echo ($parentId!=NULL) ? 'para "' . $actual_item['shortname'] . '"' : 'general'; ?></h1>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<form id="formAddItem" method="POST" action="admin.php">
+					<div class="modal-body">
+						<div class="mb-3">
+							<label for="itemShortname" class="form-label">Shortname <span class="text-danger">*</span></label>
+							<input type="text" class="form-control" id="itemShortname" name="shortname" placeholder="Ej: home" required>
+						</div>
+						<div class="mb-3">
+							<label for="itemTitle" class="form-label">Título <span class="text-danger">*</span></label>
+							<input type="text" class="form-control" id="itemTitle" name="title" placeholder="Ej: Mi página principal">
+						</div>
+						<div class="mb-3">
+							<label for="itemSubtitle" class="form-label">Subtítulo</label>
+							<input type="text" class="form-control" id="itemSubtitle" name="subtitle" placeholder="Subtítulo opcional">
+						</div>
+						<div class="mb-3">
+							<label for="itemContent" class="form-label">Contenido</label>
+							<textarea class="form-control" id="itemContent" name="content" rows="5" placeholder="Contenido del item"></textarea>
+						</div>
+						<div class="mb-3">
+							<label for="itemExcerpt" class="form-label">Extracto</label>
+							<textarea class="form-control" id="itemExcerpt" name="excerpt" rows="2" placeholder="Resumen corto"></textarea>
+						</div>
+						<div class="mb-3">
+							<label for="itemSlug" class="form-label">URL</label>
+							<input type="text" class="form-control" id="itemSlug" name="url" placeholder="Ej: http://ejemplo.com">
+						</div>
+						<div class="mb-3">
+							<label for="itemSlug" class="form-label">Link de imagen o video</label>
+							<input type="text" class="form-control" id="itemSlug" name="media_link" placeholder="Ej: http://ejemplo.com/imagen.jpg">
+						</div>
+						<div class="mb-3">
+							<label for="itemStatus" class="form-label">Estado</label>
+							<select class="form-select" id="itemStatus" name="status" required>
+								<option value="1">Activo</option>
+								<option value="0">Inactivo</option>
+							</select>
+						</div>
+						<div class="mb-3">
+							<label for="itemOrder" class="form-label">Orden</label>
+							<input type="number" class="form-control" id="itemOrder" name="order" value="0" min="0">
+						</div>
+						<input type="hidden" name="parent_id" value="<?php echo $parentId !== null ? $parentId : 0; ?>">
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+						<button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> Guardar Item</button>
+					</div>
+				</form>
 			</div>
 		</div>
 	</div>
