@@ -129,7 +129,7 @@ function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 					</thead>
 					<tbody>
 					<?php if (empty($items)): ?>
-						<tr><td colspan="6" class="text-center small-muted">No hay items raíz.</td></tr>
+						<tr><td colspan="6" class="text-center small-muted">No hay items.</td></tr>
 					<?php else: ?>
 						<?php foreach ($items as $r):
 								$id = (int)$r['id'];
