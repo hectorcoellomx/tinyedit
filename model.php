@@ -295,13 +295,18 @@ class Item extends BaseModel {
         return $items;
     }
 
-    // Obtener hijos de un item
+    // Obtener hijos de un item (si parentId es null, busca items raíz)
     public function getChildren($parentId, $status = null) {
-        $sql = "SELECT * FROM `items` WHERE `parent_id` = ?";
-        $params = [$parentId];
+        if ($parentId === null) {
+            $sql = "SELECT * FROM `items` WHERE `parent_id` IS NULL";
+            $params = [];
+        } else {
+            $sql = "SELECT * FROM `items` WHERE `parent_id` = ?";
+            $params = [$parentId];
+        }
 
         if ($status !== null) {
-            $sql .= " AND `status` = ?";
+            $sql .= $params ? " AND `status` = ?" : " AND `status` = ?";
             $params[] = $status;
         }
 
