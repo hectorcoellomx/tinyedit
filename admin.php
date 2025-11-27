@@ -82,9 +82,12 @@ function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 		body { background:#f8f9fa; }
 		.table-actions { min-width:140px; }
 		.small-muted { font-size:0.85rem; color:#6c757d; }
+		[v-cloak] { display: none; }
 	</style>
 </head>
 <body>
+
+<div id="app" v-cloak>
 
 <nav class="navbar bg-dark border-bottom border-body" data-bs-theme="dark">
 	<div class="container-fluid">
@@ -107,7 +110,7 @@ function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 			<?php
 			echo ($parentId!=NULL) ? '<a href="admin.php?item=' . $actual_item['parent_id'] . '" class="btn btn-sm btn-secondary"><i class="bi bi-arrow-left"></i> Volver atrás</a>' : '';
 			?>
-			<button type="button" class="btn btn-sm btn-success" onclick="setAction()">
+			<button type="button" class="btn btn-sm btn-success" @click="setAction()">
 				<i class="bi bi-plus-circle"></i> Agregar
 			</button>
 		</div>
@@ -146,7 +149,7 @@ function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 										<i class="bi bi-folder2-open"></i> Abrir
 									</a>
 
-									<button type="button" class="btn btn-sm btn-primary" onclick="setAction(<?php echo $id; ?>)" title="Editar">
+									<button type="button" class="btn btn-sm btn-primary" @click="setAction(<?php echo $id; ?>)" title="Editar">
 										<i class="bi bi-pencil"></i> Editar
 									</button>
 
@@ -173,46 +176,46 @@ function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 					<div class="modal-body">
 						<div class="mb-3">
 							<label for="itemShortname" class="form-label">Shortname <span class="text-danger">*</span></label>
-							<input type="text" class="form-control" id="itemShortname" name="shortname" placeholder="Ej: home" required>
+							<input type="text" class="form-control" id="itemShortname" v-model="form.shortname" name="shortname" placeholder="Ej: home" required>
 						</div>
 						<div class="mb-3">
 							<label for="itemTitle" class="form-label">Título</label>
-							<input type="text" class="form-control" id="itemTitle" name="title" placeholder="Ej: Mi página principal">
+							<input type="text" class="form-control" id="itemTitle" v-model="form.title" name="title" placeholder="Ej: Mi página principal">
 						</div>
 						<div class="mb-3">
 							<label for="itemSubtitle" class="form-label">Subtítulo</label>
-							<input type="text" class="form-control" id="itemSubtitle" name="subtitle" placeholder="Subtítulo opcional">
+							<input type="text" class="form-control" id="itemSubtitle" v-model="form.subtitle" name="subtitle" placeholder="Subtítulo opcional">
 						</div>
 						<div class="mb-3">
 							<label for="itemContent" class="form-label">Contenido</label>
-							<textarea class="form-control" id="itemContent" name="content" rows="5" placeholder="Contenido del item"></textarea>
+							<textarea class="form-control" id="itemContent" v-model="form.content" name="content" rows="5" placeholder="Contenido del item"></textarea>
 						</div>
 						<div class="mb-3">
 							<label for="itemExcerpt" class="form-label">Extracto</label>
-							<textarea class="form-control" id="itemExcerpt" name="excerpt" rows="2" placeholder="Resumen corto"></textarea>
+							<textarea class="form-control" id="itemExcerpt" v-model="form.excerpt" name="excerpt" rows="2" placeholder="Resumen corto"></textarea>
 						</div>
 						<div class="mb-3">
-							<label for="itemSlug" class="form-label">URL</label>
-							<input type="text" class="form-control" id="itemSlug" name="url" placeholder="Ej: http://ejemplo.com">
+							<label for="itemUrl" class="form-label">URL</label>
+							<input type="text" class="form-control" id="itemUrl" v-model="form.url" name="url" placeholder="Ej: http://ejemplo.com">
 						</div>
 						<div class="mb-3">
-							<label for="itemSlug" class="form-label">Link de imagen o video</label>
-							<input type="text" class="form-control" id="itemSlug" name="media_link" placeholder="Ej: http://ejemplo.com/imagen.jpg">
+							<label for="itemMediaLink" class="form-label">Link de imagen o video</label>
+							<input type="text" class="form-control" id="itemMediaLink" v-model="form.media_link" name="media_link" placeholder="Ej: http://ejemplo.com/imagen.jpg">
 						</div>
 						<div class="mb-3">
 							<label for="itemStatus" class="form-label">Estado</label>
-							<select class="form-select" id="itemStatus" name="status" required>
+							<select class="form-select" id="itemStatus" v-model="form.status" name="status" required>
 								<option value="1">Activo</option>
 								<option value="0">Inactivo</option>
 							</select>
 						</div>
 						<div class="mb-3">
 							<label for="itemOrder" class="form-label">Orden</label>
-							<input type="number" class="form-control" id="itemOrder" name="order" value="0" min="0">
+							<input type="number" class="form-control" id="itemOrder" v-model.number="form.order" name="order" value="0" min="0">
 						</div>
-						<input type="hidden" id="type_action" name="type_action" value="create">
-						<input type="hidden" id="item_id" name="id" value="">
-						<input type="hidden" name="parent_id" value="<?php echo $parentId !== null ? $parentId : ''; ?>">
+						<input type="hidden" id="type_action" v-model="form.type_action" name="type_action" value="create">
+						<input type="hidden" id="item_id" v-model="form.id" name="id" value="">
+						<input type="hidden" name="parent_id" :value="form.parent_id">
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -225,26 +228,55 @@ function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
 </div>
 
-<script>
-	function setAction(id = null) {
-		const typeActionInput = document.getElementById('type_action');
-		const itemIdInput = document.getElementById('item_id');
-		const modal = new bootstrap.Modal(document.getElementById('modalAddItem'));
-		
-		if (id) {
-			// Editar
-			typeActionInput.value = 'update';
-			itemIdInput.value = id;
-		} else {
-			// Crear
-			typeActionInput.value = 'create';
-			itemIdInput.value = '';
-		}
-		
-		modal.show();
-	}
-</script>
-<!-- Bootstrap JS (opcional) -->
+</div>
+
+</div>
+
+<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Vue.js -->
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script>
+	const { createApp } = Vue;
+
+	createApp({
+		data() {
+			return {
+				form: {
+					shortname: '',
+					title: '',
+					subtitle: '',
+					content: '',
+					excerpt: '',
+					url: '',
+					media_link: '',
+					status: '1',
+					order: 0,
+					type_action: 'create',
+					id: '',
+					parent_id: '<?php echo $parentId !== null ? $parentId : ''; ?>'
+				},
+				modalInstance: null
+			};
+		},
+		mounted() {
+			this.modalInstance = new bootstrap.Modal(document.getElementById('modalAddItem'));
+		},
+		methods: {
+			setAction(id = null) {
+				if (id) {
+					// Editar
+					this.form.type_action = 'update';
+					this.form.id = id;
+				} else {
+					// Crear
+					this.form.type_action = 'create';
+					this.form.id = '';
+				}
+				this.modalInstance.show();
+			}
+		}
+	}).mount('#app');
+</script>
 </body>
 </html>
