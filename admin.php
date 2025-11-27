@@ -2,6 +2,8 @@
 
 require_once 'model.php';
 
+$base_url = 'http://localhost/tinyedit/'; // Ajustar si es necesario
+
 $itemModel = new Item();
 
 // Variables para mensajes
@@ -236,7 +238,12 @@ function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <!-- Vue.js -->
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+
 <script>
+	
+	var base_url = '<?php echo $base_url; ?>';
+
 	const { createApp } = Vue;
 
 	createApp({
@@ -263,15 +270,35 @@ function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 			this.modalInstance = new bootstrap.Modal(document.getElementById('modalAddItem'));
 		},
 		methods: {
-			setAction(id = null) {
+			async fetchItem(id) {
+				try {
+					const res = await fetch(`${base_url}api.php?id=${id}`);
+					const data = await res.json();
+					if (data.item) {
+						for (const key in this.form) {
+							if (key in data.item) {
+								this.form[key] = data.item[key] ?? '';
+							}
+						}
+					}
+				} catch (e) {
+					console.error('Error al obtener el item', e);
+				}
+			},
+			async setAction(id = null) {
 				if (id) {
-					// Editar
 					this.form.type_action = 'update';
 					this.form.id = id;
+					await this.fetchItem(id);
 				} else {
-					// Crear
 					this.form.type_action = 'create';
 					this.form.id = '';
+					// Limpiar el formulario
+					for (const key in this.form) {
+						if (key !== 'type_action' && key !== 'parent_id') this.form[key] = '';
+					}
+					this.form.status = '1';
+					this.form.order = 0;
 				}
 				this.modalInstance.show();
 			}
