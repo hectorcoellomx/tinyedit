@@ -44,12 +44,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['shortname'])) {
 			'order' => isset($_POST['order']) ? (int)$_POST['order'] : 0
 		];
 		
+		// Detectar si es update o create
+		$isUpdate = isset($_POST['type_action']) && $_POST['type_action'] === 'update' && !empty($_POST['id']);
+		$itemId = $isUpdate ? (int)$_POST['id'] : null;
+		
 		try {
-			$newId = $itemModel->create($data);
-			$message = "Item creado exitosamente con ID: $newId";
-			$messageType = 'success';
-
-			$parentId = $parent;
+			if ($isUpdate) {
+				// Actualizar item
+				$itemModel->update($itemId, $data);
+				$message = "Item actualizado exitosamente (ID: $itemId)";
+				$messageType = 'success';
+			} else {
+				// Crear nuevo item
+				$newId = $itemModel->create($data);
+				$message = "Item creado exitosamente con ID: $newId";
+				$messageType = 'success';
+				$parentId = $parent;
+			}
 		} catch (Exception $e) {
 			$message = 'Error al guardar el item: ' . $e->getMessage();
 			$messageType = 'error';
@@ -174,7 +185,7 @@ function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 					<h1 class="modal-title fs-5" id="modalAddItemLabel">Agregar nuevo item <?php echo ($parentId!=NULL) ? 'para "' . $actual_item['shortname'] . '"' : 'general'; ?></h1>
 					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 				</div>
-				<form id="formAddItem" method="POST" action="admin.php">
+				<form id="formAddItem" @submit.prevent="saveItem">
 					<div class="modal-body">
 						<div class="mb-3">
 							<label for="itemShortname" class="form-label">Shortname <span class="text-danger">*</span></label>
@@ -283,6 +294,60 @@ function h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 					}
 				} catch (e) {
 					console.error('Error al obtener el item', e);
+				}
+			},
+			async saveItem() {
+				if (this.form.type_action === 'update') {
+					await this.updateItem();
+				} else {
+					await this.createItem();
+				}
+			},
+			async createItem() {
+				try {
+					const formData = new FormData();
+					for (const key in this.form) {
+						formData.append(key, this.form[key]);
+					}
+
+					const res = await fetch(`${base_url}admin.php`, {
+						method: 'POST',
+						body: formData
+					});
+
+					const text = await res.text();
+					// Recargar la página para ver los cambios
+					if (text.includes('Item creado exitosamente')) {
+						window.location.reload();
+					}
+				} catch (e) {
+					console.error('Error al crear el item', e);
+					alert('Error al crear el item');
+				}
+			},
+			async updateItem() {
+				try {
+					const formData = new FormData();
+					for (const key in this.form) {
+						formData.append(key, this.form[key]);
+					}
+
+					const res = await fetch(`${base_url}admin.php`, {
+						method: 'POST',
+						body: formData
+					});
+
+					const text = await res.text();
+					// Recargar la página para ver los cambios
+					if (text.includes('Item actualizado')) {
+						window.location.reload();
+					} else {
+						alert('Item actualizado correctamente');
+						window.location.reload();
+					}
+				} catch (e) {
+					console.error('Error al actualizar el item', e);
+					alert('Error al actualizar el item');
 				}
 			},
 			async setAction(id = null) {
